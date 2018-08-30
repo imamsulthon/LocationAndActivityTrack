@@ -22,6 +22,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
@@ -29,10 +30,33 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.util.Log;
 
+import com.google.android.gms.location.DetectedActivity;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Utility methods used in this sample.
@@ -41,6 +65,10 @@ class Utils {
 
     final static String KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested";
     final static String KEY_LOCATION_UPDATES_RESULT = "location-update-result";
+    final static String KEY_LATITUDE = "latitude";
+    final static String KEY_LONGITUDE = "longitude";
+    final static String KEY_SPEED = "speed";
+
     final static String CHANNEL_ID = "channel_01";
 
     static void setRequestingLocationUpdates(Context context, boolean value) {
@@ -117,6 +145,69 @@ class Utils {
         mNotificationManager.notify(0, builder.build());
     }
 
+    static void sendToMQTT(Context context, Location location) {
+
+        PahoMqttClient pahoMqttClient = new PahoMqttClient();
+
+        String clientId = MqttClient.generateClientId();
+        MqttAndroidClient client = pahoMqttClient.getMqttClient(context, Constants.MQTT_BROKER_URL, clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setUserName(Constants.USERNAME);
+        options.setPassword(Constants.PASSWORD.toCharArray());
+        options.setAutomaticReconnect(true);
+
+        try {
+            IMqttToken token = client.connect(options);
+            token.setActionCallback(new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    // We are connected
+                    Log.d("MQTT", " is onSucces");
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    // Something went wrong e.g. connection timeout or firewall problems
+                    Log.d("MQTT", " is onFailure");
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getDefault());
+        Date date = new Date(location.getTime());
+        String dateString = date.toString();
+        Double longitude = location.getLongitude();
+        Double latitude = location.getLatitude();
+        float speed = location.getSpeed();
+
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + ", " +
+                Double.toString(location.getLongitude()) + " Speed: " +
+                Double.toString(speed) + " km/h " + dateString;
+
+        JSONObject latlong = new JSONObject();
+        try {
+            latlong.put("Latitude", latitude);
+            latlong.put("Longitude", longitude);
+            latlong.put("Speed", speed);
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+        if (!msg.isEmpty()) {
+            try {
+                pahoMqttClient.publishMessage(client, latlong.toString().trim(), 1, Constants.PUBLISH_TOPIC);
+            } catch (MqttException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     /**
      * Returns the title for reporting about a list of {@link Location} objects.
@@ -127,6 +218,42 @@ class Utils {
         String numLocationsReported = context.getResources().getQuantityString(
                 R.plurals.num_locations_reported, locations.size(), locations.size());
         return numLocationsReported + ": " + DateFormat.getDateTimeInstance().format(new Date());
+    }
+
+    static String getLatitude(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_LATITUDE, "");    }
+
+    static void setLatitude(Context context, Location location) {
+        String latitude = String.valueOf(location.getLatitude());
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_LATITUDE, latitude)
+                .apply();
+    }
+
+    static String getSpeed(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_SPEED, "");    }
+
+    static void setSpeed(Context context, Location location) {
+        String speed = String.valueOf(location.getSpeed());
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_SPEED, speed)
+                .apply();
+    }
+
+    static String getLongitude(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_LONGITUDE, "");    }
+
+    static void setLongitude(Context context, Location location) {
+        String longitude = String.valueOf(location.getLongitude());
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_LONGITUDE, longitude)
+                .apply();
     }
 
     /**
@@ -144,7 +271,9 @@ class Utils {
             sb.append(location.getLatitude());
             sb.append(", ");
             sb.append(location.getLongitude());
-            sb.append(")");
+            sb.append(", ");
+            sb.append(location.getSpeed());
+            sb.append(" km/h)");
             sb.append("\n");
         }
         return sb.toString();
@@ -161,5 +290,49 @@ class Utils {
     static String getLocationUpdatesResult(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(KEY_LOCATION_UPDATES_RESULT, "");
+    }
+
+    static ArrayList<DetectedActivity> detectedActivitiesFromJson(String jsonArray) {
+        Type listType = new TypeToken<ArrayList<DetectedActivity>>(){}.getType();
+        ArrayList<DetectedActivity> detectedActivities = new Gson().fromJson(jsonArray, listType);
+        if (detectedActivities == null) {
+            detectedActivities = new ArrayList<>();
+        }
+        return detectedActivities;
+    }
+
+    static String detectedActivitiesToJson(ArrayList<DetectedActivity> detectedActivitiesList) {
+        Type type = new TypeToken<ArrayList<DetectedActivity>>() {}.getType();
+        return new Gson().toJson(detectedActivitiesList, type);
+    }
+
+    static String getActivityString(Context context, int detectedActivityType) {
+        Resources resources = context.getResources();
+        switch(detectedActivityType) {
+            case DetectedActivity.IN_VEHICLE:
+                return resources.getString(R.string.in_vehicle);
+            case DetectedActivity.ON_BICYCLE:
+                return resources.getString(R.string.on_bicycle);
+            case DetectedActivity.ON_FOOT:
+                return resources.getString(R.string.on_foot);
+            case DetectedActivity.RUNNING:
+                return resources.getString(R.string.running);
+            case DetectedActivity.STILL:
+                return resources.getString(R.string.still);
+            case DetectedActivity.TILTING:
+                return resources.getString(R.string.tilting);
+            case DetectedActivity.UNKNOWN:
+                return resources.getString(R.string.unknown);
+            case DetectedActivity.WALKING:
+                return resources.getString(R.string.walking);
+            default:
+                return resources.getString(R.string.unidentifiable_activity, detectedActivityType);
+        }
+    }
+
+    static double round(double unrounded, int precision, int roundingMode) {
+        BigDecimal bd = new BigDecimal(unrounded);
+        BigDecimal rounded = bd.setScale(precision, roundingMode);
+        return rounded.doubleValue();
     }
 }

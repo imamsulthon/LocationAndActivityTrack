@@ -23,6 +23,16 @@ import android.util.Log;
 
 import com.google.android.gms.location.LocationResult;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
@@ -38,17 +48,45 @@ import java.util.List;
  *  {@link com.google.android.gms.location.LocationRequest} when the app is no longer in the
  *  foreground.
  */
-public class LocationUpdatesIntentService extends IntentService {
+public class LocationUpdatesIntentService extends IntentService implements IMqttActionListener {
 
-    private static final String ACTION_PROCESS_UPDATES =
+    public static final String ACTION_PROCESS_UPDATES =
             "com.google.android.gms.location.sample.locationupdatespendingintent.action" +
                     ".PROCESS_UPDATES";
     private static final String TAG = LocationUpdatesIntentService.class.getSimpleName();
 
+    String latitude;
+    String longitude;
+    String speed;
+
+    //Mqtt
+    private MqttAndroidClient client;
+    private PahoMqttClient pahoMqttClient;
 
     public LocationUpdatesIntentService() {
         // Name the worker thread.
         super(TAG);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        pahoMqttClient = new PahoMqttClient();
+        String clientId = MqttClient.generateClientId();
+        client = pahoMqttClient.getMqttClient(getApplicationContext(), Constants.MQTT_BROKER_URL,clientId);
+
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setUserName(Constants.USERNAME);
+        options.setPassword(Constants.PASSWORD.toCharArray());
+        options.setAutomaticReconnect(true);
+
+        try {
+            IMqttToken token = client.connect(options);
+            token.setActionCallback(this);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -59,11 +97,56 @@ public class LocationUpdatesIntentService extends IntentService {
                 LocationResult result = LocationResult.extractResult(intent);
                 if (result != null) {
                     List<Location> locations = result.getLocations();
+                    Location location = locations.get(0);
                     Utils.setLocationUpdatesResult(this, locations);
                     Utils.sendNotification(this, Utils.getLocationResultTitle(this, locations));
-                    Log.i(TAG, Utils.getLocationUpdatesResult(this));
+                    Log.e(TAG, Utils.getLocationUpdatesResult(this));
+
+                    setLocation(location);
                 }
             }
         }
+    }
+
+    private void setLocation(Location location) {
+        this.latitude = String.valueOf(location.getLatitude());
+        this.longitude = String.valueOf(location.getLongitude());
+        this.speed = String.valueOf(location.getSpeed());
+    }
+
+    public void sendToMQTT(String latitude, String longitude, String speed ) {
+        JSONObject latlong = new JSONObject();
+        try {
+            latlong.put("Latitude", latitude);
+            latlong.put("Longitude", longitude);
+            latlong.put("Speed", speed);
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            pahoMqttClient.publishMessage(client, latlong.toString().trim(), 1, Constants.PUBLISH_TOPIC);
+            Log.d(TAG, "location sent to Mqtt");
+        } catch (MqttException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onSuccess(IMqttToken asyncActionToken) {
+        Log.d(TAG, "Mqtt is onSuccess connected");
+        if (latitude == null && longitude == null && speed == null) {
+            Log.e(TAG, "Location is null");
+        } else {
+            sendToMQTT(latitude, longitude, speed);
+        }
+    }
+
+    @Override
+    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+        Log.d(TAG, "Mqtt is onFailure connected");
+        exception.printStackTrace();
     }
 }

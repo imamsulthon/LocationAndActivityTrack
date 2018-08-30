@@ -18,6 +18,7 @@ package com.google.android.gms.location.sample.locationupdatespendingintent;
 
 import android.Manifest;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -32,11 +33,22 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+
+import java.util.ArrayList;
 
 
 /**
@@ -84,15 +96,30 @@ public class MainActivity extends FragmentActivity implements
     private Button mRequestUpdatesButton;
     private Button mRemoveUpdatesButton;
     private TextView mLocationUpdatesResultView;
+    private ListView mdetectedActivityListView;
+
+    // Activity Recognition Api
+    private Context mContext;
+
+    ActivityRecognitionClient activityRecognitionClient;
+    private DetectedActivitiesAdapter mAdapter;
+
+    //Mqtt
+    public String clientId;
+    private MqttAndroidClient client;
+    private PahoMqttClient pahoMqttClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mContext = this;
+
         mRequestUpdatesButton = (Button) findViewById(R.id.request_updates_button);
         mRemoveUpdatesButton = (Button) findViewById(R.id.remove_updates_button);
         mLocationUpdatesResultView = (TextView) findViewById(R.id.location_updates_result);
+        mdetectedActivityListView = findViewById(R.id.detected_activities_listview);
 
         // Check if the user revoked runtime permissions.
         if (!checkPermissions()) {
@@ -101,6 +128,16 @@ public class MainActivity extends FragmentActivity implements
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
+
+        //region Activity Recognition
+        ArrayList<DetectedActivity> detectedActivities = Utils.detectedActivitiesFromJson(
+                PreferenceManager.getDefaultSharedPreferences(this).getString(
+                        Constants.KEY_DETECTED_ACTIVITIES, ""));
+        mAdapter = new DetectedActivitiesAdapter(this, detectedActivities);
+        mdetectedActivityListView.setAdapter(mAdapter);
+        activityRecognitionClient = new ActivityRecognitionClient(this);
+        //endregion
+
     }
 
     @Override
@@ -116,6 +153,7 @@ public class MainActivity extends FragmentActivity implements
         super.onResume();
         updateButtonsState(Utils.getRequestingLocationUpdates(this));
         mLocationUpdatesResultView.setText(Utils.getLocationUpdatesResult(this));
+        updateDetectedActivitiesList();
     }
 
     @Override
@@ -123,6 +161,13 @@ public class MainActivity extends FragmentActivity implements
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
         super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+        super.onPause();
     }
 
     /**
@@ -168,13 +213,13 @@ public class MainActivity extends FragmentActivity implements
         // started in the background in "O".
 
         // TODO(developer): uncomment to use PendingIntent.getService().
-//        Intent intent = new Intent(this, LocationUpdatesIntentService.class);
-//        intent.setAction(LocationUpdatesIntentService.ACTION_PROCESS_UPDATES);
-//        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(this, LocationUpdatesIntentService.class);
+        intent.setAction(LocationUpdatesIntentService.ACTION_PROCESS_UPDATES);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent intent = new Intent(this, LocationUpdatesBroadcastReceiver.class);
-        intent.setAction(LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES);
-        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+//        Intent intent = new Intent(this, LocationUpdatesBroadcastReceiver.class);
+//        intent.setAction(LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES);
+//        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -283,6 +328,9 @@ public class MainActivity extends FragmentActivity implements
      * Handles the Request Updates button and requests start of location updates.
      */
     public void requestLocationUpdates(View view) {
+
+        // region Location updates
+
         try {
             Log.i(TAG, "Starting location updates");
             Utils.setRequestingLocationUpdates(this, true);
@@ -291,15 +339,92 @@ public class MainActivity extends FragmentActivity implements
             Utils.setRequestingLocationUpdates(this, false);
             e.printStackTrace();
         }
+
+        // endregion
+
+        //region Activity updates
+        Task<Void> task = activityRecognitionClient.requestActivityUpdates(
+                Constants.DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(mContext,
+                        getString(R.string.activity_updates_enabled),
+                        Toast.LENGTH_SHORT)
+                        .show();
+                setUpdatesRequestedState(true);
+                updateDetectedActivitiesList();
+
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, getString(R.string.activity_updates_not_enabled));
+                Toast.makeText(mContext,
+                        getString(R.string.activity_updates_not_enabled),
+                        Toast.LENGTH_SHORT)
+                        .show();
+                setUpdatesRequestedState(false);
+            }
+        });
+        //endregion
+
     }
 
     /**
      * Handles the Remove Updates button, and requests removal of location updates.
      */
     public void removeLocationUpdates(View view) {
+
+        //region removing location
+
         Log.i(TAG, "Removing location updates");
         Utils.setRequestingLocationUpdates(this, false);
         mFusedLocationClient.removeLocationUpdates(getPendingIntent());
+
+        //endregion
+
+        //region removing activity recognition
+
+        Task<Void> task = activityRecognitionClient.removeActivityUpdates(
+                getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(mContext,
+                        getString(R.string.activity_updates_removed),
+                        Toast.LENGTH_SHORT)
+                        .show();
+                setUpdatesRequestedState(false);
+                mAdapter.updateActivities(new ArrayList<DetectedActivity>());
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, getString(R.string.activity_updates_not_removed));
+                Toast.makeText(mContext, getString(R.string.activity_updates_not_removed),
+                        Toast.LENGTH_SHORT).show();
+                setUpdatesRequestedState(true);
+            }
+        });
+
+        //endregion
+    }
+
+    private PendingIntent getActivityDetectionPendingIntent() {
+        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+        intent.setAction(DetectedActivitiesIntentService.ACTION_PROCESS_UPDATES_ACTIVITY);
+
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // requestActivityUpdates() and removeActivityUpdates().
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -316,4 +441,25 @@ public class MainActivity extends FragmentActivity implements
             mRemoveUpdatesButton.setEnabled(false);
         }
     }
+
+    protected void updateDetectedActivitiesList() {
+        ArrayList<DetectedActivity> detectedActivities = Utils.detectedActivitiesFromJson(
+                PreferenceManager.getDefaultSharedPreferences(mContext)
+                        .getString(Constants.KEY_DETECTED_ACTIVITIES, ""));
+
+        mAdapter.updateActivities(detectedActivities);
+    }
+
+    private void setUpdatesRequestedState(boolean requesting) {
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putBoolean(Constants.KEY_ACTIVITY_UPDATES_REQUESTED, requesting)
+                .apply();
+    }
+
+    private boolean getUpdatesRequestedState() {
+        return PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(Constants.KEY_ACTIVITY_UPDATES_REQUESTED, false);
+    }
+
 }

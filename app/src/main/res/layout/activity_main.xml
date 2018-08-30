@@ -11,20 +11,59 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.google.android.gms.location.sample.locationupdatespendingintent.MainActivity">
 
-    <TextView
-        android:id="@+id/using_batched_location_view"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/batched_location_updates"
-        android:layout_marginBottom="@dimen/default_margin"
-        android:textSize="@dimen/text_large" />
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@mipmap/ic_launcher"/>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/appName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18dp"
+                android:text="@string/app_name"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/appName"
+                android:text="Shuttle Bus Tracking"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <!--<TextView-->
+        <!--android:id="@+id/using_batched_location_view"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/app_name"-->
+        <!--android:textSize="@dimen/text_large"-->
+        <!--android:drawableLeft="@mipmap/ic_launcher"/>-->
+    <!---->
+    <!--<TextView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginLeft="5dp"-->
+        <!--android:text="Shuttle Bus Tracking"/>-->
 
     <Button
         android:id="@+id/request_updates_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="requestLocationUpdates"
-        android:text="@string/request_updates" />
+        android:text="@string/start_driving" />
 
     <Button
         android:id="@+id/remove_updates_button"
@@ -32,10 +71,25 @@
         android:layout_height="wrap_content"
         android:onClick="removeLocationUpdates"
         android:layout_marginBottom="@dimen/default_margin"
-        android:text="@string/remove_updates" />
+        android:text="@string/stop_driving" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Location: "/>
 
     <TextView
         android:id="@+id/location_updates_result"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Detected Activity: "/>
+
+    <ListView
+        android:id="@+id/detected_activities_listview"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

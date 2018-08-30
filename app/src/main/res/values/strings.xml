@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Location Updates PendingIntent</string>
+    <string name="app_name">GO-Elf</string>
 
     <string name="permission_rationale">Location permission is needed for core functionality</string>
     <string name="permission_denied_explanation">Permission was denied, but is needed for core
@@ -10,12 +10,32 @@
     <string name="request_updates">Request updates</string>
     <string name="remove_updates">Remove updates</string>
     <string name="unknown_location">Unknown location</string>
+    <string name="start_driving">Start Driving</string>
+    <string name="stop_driving">Stop Driving</string>
 
-    <string name="batched_location_updates">Batched location updates</string>
+    <string name="batched_location_updates">Location Tracking</string>
 
     <plurals name="num_locations_reported">
         <item quantity="zero">No location reported</item>
         <item quantity="one">One location reported</item>
         <item quantity="other">%d locations reported</item>
     </plurals>
+
+    <!-- Activity detection strings -->
+    <string name="in_vehicle">In a vehicle</string>
+    <string name="on_bicycle">On a bicycle</string>
+    <string name="on_foot">On foot</string>
+    <string name="running">Running</string>
+    <string name="still">Still</string>
+    <string name="tilting">Tilting</string>
+    <string name="unknown">Unknown activity</string>
+    <string name="walking">Walking</string>
+    <string name="unidentifiable_activity">Unidentifiable activity: %1$d</string>
+
+    <string name="activity_updates_enabled">Activity updates enabled</string>
+    <string name="activity_updates_not_enabled">Failed to enable activity updates</string>
+    <string name="activity_updates_removed">Activity updates removed</string>
+    <string name="activity_updates_not_removed">Failed to remove activity updates</string>
+
+    <string name="percent">%1$d%%</string>
 </resources>
