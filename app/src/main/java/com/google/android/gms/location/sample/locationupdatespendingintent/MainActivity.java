@@ -98,6 +98,7 @@ public class MainActivity extends FragmentActivity implements
     private TextView mLocationUpdatesResultView;
     private ListView mdetectedActivityListView;
 
+    boolean firstOpen = true;
     // Activity Recognition Api
     private Context mContext;
 
@@ -124,6 +125,10 @@ public class MainActivity extends FragmentActivity implements
         // Check if the user revoked runtime permissions.
         if (!checkPermissions()) {
             requestPermissions();
+        }
+
+        if (firstOpen) {
+            updateButtonsState(true);
         }
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
