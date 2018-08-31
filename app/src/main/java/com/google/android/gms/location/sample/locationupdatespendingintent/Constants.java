@@ -33,11 +33,11 @@ public class Constants {
     //public static final String PUBLISH_TOPIC = "test";
 
     // Elf 1
-//    public static final String USERNAME = "vc7XV9yojXt1NxwPv423";
-//    public static final String PASSWORD = "";
+    public static final String USERNAME_elf_1 = "vc7XV9yojXt1NxwPv423";
+    public static final String PASSWORD_elf_1 = "";
 
 //    elf2
-    public static final String USERNAME = "kxrs3W3C1z1wi7BAGw5W";
-    public static final String PASSWORD = "";
+    public static final String USERNAME_elf_2 = "kxrs3W3C1z1wi7BAGw5W";
+    public static final String PASSWORD_elf_2 = "";
 
 }

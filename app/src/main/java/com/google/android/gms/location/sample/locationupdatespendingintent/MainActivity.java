@@ -19,6 +19,7 @@ package com.google.android.gms.location.sample.locationupdatespendingintent;
 import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -30,8 +31,11 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -95,6 +99,7 @@ public class MainActivity extends FragmentActivity implements
     // UI Widgets.
     private Button mRequestUpdatesButton;
     private Button mRemoveUpdatesButton;
+    private Button mLogoutButton;
     private TextView mLocationUpdatesResultView;
     private ListView mdetectedActivityListView;
 
@@ -114,6 +119,7 @@ public class MainActivity extends FragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mContext = this;
 
@@ -121,14 +127,16 @@ public class MainActivity extends FragmentActivity implements
         mRemoveUpdatesButton = (Button) findViewById(R.id.remove_updates_button);
         mLocationUpdatesResultView = (TextView) findViewById(R.id.location_updates_result);
         mdetectedActivityListView = findViewById(R.id.detected_activities_listview);
+        mLogoutButton = findViewById(R.id.logout);
 
         // Check if the user revoked runtime permissions.
         if (!checkPermissions()) {
             requestPermissions();
         }
 
-        if (firstOpen) {
+        if (Utils.getFirstLoginState(this)) {
             updateButtonsState(true);
+            Utils.setFirstLoginState(getApplicationContext(), false);
         }
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -143,6 +151,12 @@ public class MainActivity extends FragmentActivity implements
         activityRecognitionClient = new ActivityRecognitionClient(this);
         //endregion
 
+        mLogoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onLogout();
+            }
+        });
     }
 
     @Override
@@ -390,6 +404,7 @@ public class MainActivity extends FragmentActivity implements
         Log.i(TAG, "Removing location updates");
         Utils.setRequestingLocationUpdates(this, false);
         mFusedLocationClient.removeLocationUpdates(getPendingIntent());
+        mLocationUpdatesResultView.setText("");
 
         //endregion
 
@@ -467,4 +482,72 @@ public class MainActivity extends FragmentActivity implements
                 .getBoolean(Constants.KEY_ACTIVITY_UPDATES_REQUESTED, false);
     }
 
+    private void removingService() {
+
+        //region removing location
+
+        Log.i(TAG, "Removing location updates");
+        Utils.setRequestingLocationUpdates(this, false);
+        mFusedLocationClient.removeLocationUpdates(getPendingIntent());
+
+        //endregion
+
+        //region removing activity recognition
+
+        Task<Void> task = activityRecognitionClient.removeActivityUpdates(
+                getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(mContext,
+                        getString(R.string.activity_updates_removed),
+                        Toast.LENGTH_SHORT)
+                        .show();
+                setUpdatesRequestedState(false);
+                mAdapter.updateActivities(new ArrayList<DetectedActivity>());
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, getString(R.string.activity_updates_not_removed));
+                Toast.makeText(mContext, getString(R.string.activity_updates_not_removed),
+                        Toast.LENGTH_SHORT).show();
+                setUpdatesRequestedState(true);
+            }
+        });
+
+        //endregion
+    }
+
+    private void onLogout() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        builder.setMessage("Apakah anda ingin keluar?");
+        builder.setPositiveButton("Ya", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if (mRemoveUpdatesButton.isEnabled()) {
+                    removingService();
+                }
+
+                Utils.setLoggedIn(getApplicationContext(), false);
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                MainActivity.this.finish();
+            }
+        });
+        builder.setNegativeButton("Batal", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
+    }
 }

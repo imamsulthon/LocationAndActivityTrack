@@ -51,11 +51,8 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -68,8 +65,69 @@ class Utils {
     final static String KEY_LATITUDE = "latitude";
     final static String KEY_LONGITUDE = "longitude";
     final static String KEY_SPEED = "speed";
+    final static String KEY_LOGGED_IN = "logged-state";
+    final static String KEY_USERNAME = "username";
+    final static String KEY_PASSWORD = "password";
+    final static String KEY_FIRSTLOGIN = "firstlogin";
 
     final static String CHANNEL_ID = "channel_01";
+
+    static void setLoggedIn(Context context, boolean state) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_LOGGED_IN, state)
+                .apply();
+    }
+
+    static boolean getLoggedIn(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_LOGGED_IN, false);
+    }
+
+    static void setFirstLoginState(Context context, boolean state) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_FIRSTLOGIN, state)
+                .apply();
+    }
+
+    static boolean getFirstLoginState(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_FIRSTLOGIN, false);
+    }
+
+    static void setUsername(Context context, int driverNumber) {
+        if (driverNumber == 1) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(KEY_USERNAME, Constants.USERNAME_elf_1)
+                    .apply();
+
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(KEY_PASSWORD, Constants.PASSWORD_elf_1)
+                    .apply();
+        } else if (driverNumber == 2){
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(KEY_USERNAME, Constants.USERNAME_elf_2)
+                    .apply();
+            PreferenceManager.getDefaultSharedPreferences(context)
+                    .edit()
+                    .putString(KEY_PASSWORD, Constants.PASSWORD_elf_2)
+                    .apply();
+        }
+    }
+
+    static String getUsername(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_USERNAME, "");
+    }
+
+    static String getPassword(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_PASSWORD, "");
+    }
 
     static void setRequestingLocationUpdates(Context context, boolean value) {
         PreferenceManager.getDefaultSharedPreferences(context)
@@ -153,8 +211,8 @@ class Utils {
         MqttAndroidClient client = pahoMqttClient.getMqttClient(context, Constants.MQTT_BROKER_URL, clientId);
 
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setUserName(Constants.USERNAME);
-        options.setPassword(Constants.PASSWORD.toCharArray());
+        options.setUserName(Constants.USERNAME_elf_1);
+        options.setPassword(Constants.PASSWORD_elf_1.toCharArray());
         options.setAutomaticReconnect(true);
 
         try {

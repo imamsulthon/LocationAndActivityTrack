@@ -77,8 +77,8 @@ public class LocationUpdatesIntentService extends IntentService implements IMqtt
         client = pahoMqttClient.getMqttClient(getApplicationContext(), Constants.MQTT_BROKER_URL,clientId);
 
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setUserName(Constants.USERNAME);
-        options.setPassword(Constants.PASSWORD.toCharArray());
+        options.setUserName(Utils.getUsername(getApplicationContext()));
+        options.setPassword(Utils.getPassword(getApplicationContext()).toCharArray());
         options.setAutomaticReconnect(true);
 
         try {

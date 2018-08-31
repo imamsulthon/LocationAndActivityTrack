@@ -40,6 +40,14 @@
                 android:layout_below="@+id/appName"
                 android:text="Shuttle Bus Tracking"/>
 
+            <Button
+                android:id="@+id/logout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="log out"
+                android:textAllCaps="false"/>
+
         </RelativeLayout>
 
     </LinearLayout>
