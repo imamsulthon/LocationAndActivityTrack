@@ -38,4 +38,12 @@
     <string name="activity_updates_not_removed">Failed to remove activity updates</string>
 
     <string name="percent">%1$d%%</string>
+
+    <!-- About Page -->
+    <string name="header">Head Office</string>
+    <string name="company_name">PT. VIO Intelligence</string>
+    <string name="address">Intercon Plaza, D11 &amp; D20, Meruya Ilir, Jakarta Barat, 11620, Indonesia</string>
+    <string name="telp">Tel: (62) 21 586-8521-2</string>
+    <string name="fax">Fax: (62) 21-585-3317</string>
+    <string name="email">Email: sales@gspe.co.id</string>
 </resources>
