@@ -1,4 +1,4 @@
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.view;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +8,9 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.android.gms.location.sample.locationupdatespendingintent.R;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Utils;
 
 public class LoginActivity extends AppCompatActivity {
 

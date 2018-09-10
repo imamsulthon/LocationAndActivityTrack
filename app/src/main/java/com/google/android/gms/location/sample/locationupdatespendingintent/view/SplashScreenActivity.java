@@ -1,11 +1,15 @@
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.view;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Window;
+
+import com.google.android.gms.location.sample.locationupdatespendingintent.R;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Utils;
+import com.google.android.gms.location.sample.locationupdatespendingintent.view.LoginActivity;
+import com.google.android.gms.location.sample.locationupdatespendingintent.view.MainActivity;
 
 public class SplashScreenActivity extends AppCompatActivity {
 

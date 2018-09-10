@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.view;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -34,7 +34,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -47,6 +46,14 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.sample.locationupdatespendingintent.BuildConfig;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Constants;
+import com.google.android.gms.location.sample.locationupdatespendingintent.DetectedActivitiesAdapter;
+import com.google.android.gms.location.sample.locationupdatespendingintent.R;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Utils;
+import com.google.android.gms.location.sample.locationupdatespendingintent.service.DetectedActivitiesIntentService;
+import com.google.android.gms.location.sample.locationupdatespendingintent.service.LocationUpdatesIntentService;
+import com.google.android.gms.location.sample.locationupdatespendingintent.service.PahoMqttClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -105,7 +112,6 @@ public class MainActivity extends FragmentActivity implements
     private ListView mdetectedActivityListView;
     private ImageView iconImage;
 
-    boolean firstOpen = true;
     // Activity Recognition Api
     private Context mContext;
 

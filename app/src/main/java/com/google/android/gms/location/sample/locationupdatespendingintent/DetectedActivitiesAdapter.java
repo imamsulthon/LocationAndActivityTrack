@@ -17,7 +17,7 @@ import java.util.HashMap;
 
 public class DetectedActivitiesAdapter extends ArrayAdapter<DetectedActivity> {
 
-    DetectedActivitiesAdapter(Context context,
+    public DetectedActivitiesAdapter(Context context,
                               ArrayList<DetectedActivity> detectedActivities) {
         super(context, 0, detectedActivities);
     }
@@ -56,7 +56,7 @@ public class DetectedActivitiesAdapter extends ArrayAdapter<DetectedActivity> {
      *
      * @param detectedActivities the freshly detected activities
      */
-    void updateActivities(ArrayList<DetectedActivity> detectedActivities) {
+    public void updateActivities(ArrayList<DetectedActivity> detectedActivities) {
         HashMap<Integer, Integer> detectedActivitiesMap = new HashMap<>();
         for (DetectedActivity activity : detectedActivities) {
             detectedActivitiesMap.put(activity.getType(), activity.getConfidence());

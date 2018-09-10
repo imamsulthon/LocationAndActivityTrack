@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.service;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -22,6 +22,8 @@ import android.location.Location;
 import android.util.Log;
 
 import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Constants;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Utils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;

@@ -1,4 +1,4 @@
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.service;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -7,6 +7,8 @@ import android.util.Log;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Constants;
+import com.google.android.gms.location.sample.locationupdatespendingintent.Utils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;

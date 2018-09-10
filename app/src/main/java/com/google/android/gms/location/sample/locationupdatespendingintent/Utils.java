@@ -33,6 +33,8 @@ import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.location.sample.locationupdatespendingintent.service.PahoMqttClient;
+import com.google.android.gms.location.sample.locationupdatespendingintent.view.MainActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -58,10 +60,10 @@ import java.util.TimeZone;
 /**
  * Utility methods used in this sample.
  */
-class Utils {
+public class Utils {
 
-    final static String KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested";
-    final static String KEY_LOCATION_UPDATES_RESULT = "location-update-result";
+    public final static String KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested";
+    public final static String KEY_LOCATION_UPDATES_RESULT = "location-update-result";
     final static String KEY_LATITUDE = "latitude";
     final static String KEY_LONGITUDE = "longitude";
     final static String KEY_SPEED = "speed";
@@ -72,31 +74,31 @@ class Utils {
 
     final static String CHANNEL_ID = "channel_01";
 
-    static void setLoggedIn(Context context, boolean state) {
+    public static void setLoggedIn(Context context, boolean state) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_LOGGED_IN, state)
                 .apply();
     }
 
-    static boolean getLoggedIn(Context context) {
+    public static boolean getLoggedIn(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_LOGGED_IN, false);
     }
 
-    static void setFirstLoginState(Context context, boolean state) {
+    public static void setFirstLoginState(Context context, boolean state) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_FIRSTLOGIN, state)
                 .apply();
     }
 
-    static boolean getFirstLoginState(Context context) {
+    public static boolean getFirstLoginState(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_FIRSTLOGIN, false);
     }
 
-    static void setUsername(Context context, int driverNumber) {
+    public static void setUsername(Context context, int driverNumber) {
         if (driverNumber == 1) {
             PreferenceManager.getDefaultSharedPreferences(context)
                     .edit()
@@ -119,24 +121,24 @@ class Utils {
         }
     }
 
-    static String getUsername(Context context) {
+    public static String getUsername(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(KEY_USERNAME, "");
     }
 
-    static String getPassword(Context context) {
+    public static String getPassword(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(KEY_PASSWORD, "");
     }
 
-    static void setRequestingLocationUpdates(Context context, boolean value) {
+   public static void setRequestingLocationUpdates(Context context, boolean value) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_LOCATION_UPDATES_REQUESTED, value)
                 .apply();
     }
 
-    static boolean getRequestingLocationUpdates(Context context) {
+    public static boolean getRequestingLocationUpdates(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_LOCATION_UPDATES_REQUESTED, false);
     }
@@ -145,7 +147,7 @@ class Utils {
      * Posts a notification in the notification bar when a transition is detected.
      * If the user clicks the notification, control goes to the MainActivity.
      */
-    static void sendNotification(Context context, String notificationDetails) {
+    public static void sendNotification(Context context, String notificationDetails) {
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(context, MainActivity.class);
 
@@ -272,7 +274,7 @@ class Utils {
      *
      * @param context The {@link Context}.
      */
-    static String getLocationResultTitle(Context context, List<Location> locations) {
+    public static String getLocationResultTitle(Context context, List<Location> locations) {
         String numLocationsReported = context.getResources().getQuantityString(
                 R.plurals.num_locations_reported, locations.size(), locations.size());
         return numLocationsReported + ": " + DateFormat.getDateTimeInstance().format(new Date());
@@ -337,7 +339,7 @@ class Utils {
         return sb.toString();
     }
 
-    static void setLocationUpdatesResult(Context context, List<Location> locations) {
+    public static void setLocationUpdatesResult(Context context, List<Location> locations) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(KEY_LOCATION_UPDATES_RESULT, getLocationResultTitle(context, locations)
@@ -345,12 +347,12 @@ class Utils {
                 .apply();
     }
 
-    static String getLocationUpdatesResult(Context context) {
+    public static String getLocationUpdatesResult(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(KEY_LOCATION_UPDATES_RESULT, "");
     }
 
-    static ArrayList<DetectedActivity> detectedActivitiesFromJson(String jsonArray) {
+    public static ArrayList<DetectedActivity> detectedActivitiesFromJson(String jsonArray) {
         Type listType = new TypeToken<ArrayList<DetectedActivity>>(){}.getType();
         ArrayList<DetectedActivity> detectedActivities = new Gson().fromJson(jsonArray, listType);
         if (detectedActivities == null) {
@@ -359,12 +361,12 @@ class Utils {
         return detectedActivities;
     }
 
-    static String detectedActivitiesToJson(ArrayList<DetectedActivity> detectedActivitiesList) {
+    public static String detectedActivitiesToJson(ArrayList<DetectedActivity> detectedActivitiesList) {
         Type type = new TypeToken<ArrayList<DetectedActivity>>() {}.getType();
         return new Gson().toJson(detectedActivitiesList, type);
     }
 
-    static String getActivityString(Context context, int detectedActivityType) {
+    public static String getActivityString(Context context, int detectedActivityType) {
         Resources resources = context.getResources();
         switch(detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:

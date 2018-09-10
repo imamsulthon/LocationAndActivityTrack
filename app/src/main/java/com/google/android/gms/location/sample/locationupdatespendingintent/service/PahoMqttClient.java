@@ -1,4 +1,4 @@
-package com.google.android.gms.location.sample.locationupdatespendingintent;
+package com.google.android.gms.location.sample.locationupdatespendingintent.service;
 
 import android.content.Context;
 import android.support.annotation.NonNull;

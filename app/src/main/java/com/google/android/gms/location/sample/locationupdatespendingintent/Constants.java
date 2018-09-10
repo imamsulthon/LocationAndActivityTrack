@@ -8,11 +8,11 @@ public class Constants {
 
     private Constants() {}
 
-    static final long DETECTION_INTERVAL_IN_MILLISECONDS = 30 * 1000; // 30 seconds
+    public static final long DETECTION_INTERVAL_IN_MILLISECONDS = 30 * 1000; // 30 seconds
 
-    static final String KEY_DETECTED_ACTIVITIES = PACKAGE_NAME + ".DETECTED_ACTIVITIES";
+    public static final String KEY_DETECTED_ACTIVITIES = PACKAGE_NAME + ".DETECTED_ACTIVITIES";
 
-    static final String KEY_ACTIVITY_UPDATES_REQUESTED = PACKAGE_NAME +
+    public static final String KEY_ACTIVITY_UPDATES_REQUESTED = PACKAGE_NAME +
             ".ACTIVITY_UPDATES_REQUESTED";
 
     static final int[] MONITORED_ACTIVITIES = {
